@@ -15,19 +15,21 @@ volatile uint8_t * csPort;
 uint8_t csPin;
 uint8_t spiBuf = 0x80;
 
-// lcd pins and vars
+// lcd pins
 uint8_t dataPins[] = {6, 5, 4, 3};
-#define DISPLAY_FUNCTION 0x08
+// status variables
 uint8_t displayControl = 0;
 uint8_t displayMode = 0;
 
+
+//------------------------------ User Commands ------------------------------//
 
 // Description:
 //      Initializes the lcd
 // Arguments:
 //      lcdPort (uint8_t *): A pointer to the port the lcd's cs pin is on
 //      lcdPin (uint8_t): The pin the lcd's cs pin is connected to
-void LCDInit(volatile uint8_t * lcdPort, uint8_t lcdPin){
+void lcdInit(volatile uint8_t * lcdPort, uint8_t lcdPin){
     // copy the port and pin for cs
     csPort = lcdPort;
     csPin = lcdPin;
@@ -37,56 +39,70 @@ void LCDInit(volatile uint8_t * lcdPort, uint8_t lcdPin){
     // delay roughly 50ms for lcd to start up
     delay(25000);
     // pull rs and enable low to send commands
-    LCDSetPin(RS_PIN, 0);
-    LCDSetPin(ENABLE_PIN, 0);
+    lcdSetPin(RS_PIN, 0);
+    lcdSetPin(ENABLE_PIN, 0);
     
-    // try 4 bit mode 3 times
-    LCDWrite4Bits(0x03);
-    delay(1);
-    LCDWrite4Bits(0x03);
-    delay(1);
-    LCDWrite4Bits(0x03);
-    delay(1);
-    LCDWrite4Bits(0x02);
+    // set 4 bit mode
+    lcdWrite4Bits(0x03);
+    lcdWrite4Bits(0x03);
+    lcdWrite4Bits(0x03);
+    lcdWrite4Bits(0x02);
     
     // set line number
-    LCDCommand(LCD_FUNCTIONSET | DISPLAY_FUNCTION);
+    lcdCommand(LCD_FUNCTIONSET | DISPLAY_FUNCTION);
     // turn on display with no cursor or blinking
     displayControl = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
-    LCDDisplay();
+    lcdDisplay();
     // clear display
-    LCDClear();
+    lcdClear();
     
     // initialize text direction
     displayMode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
-    LCDCommand(LCD_ENTRYMODESET | displayMode);
+    lcdCommand(LCD_ENTRYMODESET | displayMode);
 }
 
 
-void LCDPrint(uint8_t * data, uint8_t length){
+// Description:
+//      Prints text to the lcd
+// Arguments:
+//      data (uint8_t *): A pointer to the text to print
+//      length (uint8_t): The length of the string to print
+void lcdPrint(uint8_t * data, uint8_t length){
     while(length > 0){
-        LCDWrite(*data++);
+        lcdWrite(*data++);
         length--;
     }
 }
 
+
 // Description:
 //      Clears the lcd
-void LCDClear(){
-    LCDCommand(LCD_CLEARDISPLAY);
+// Arguments:
+//      None
+void lcdClear(){
+    lcdCommand(LCD_CLEARDISPLAY);
     delay(1000);
 }
+
 
 // Description:
-//
-void LCDHome(){
-    LCDCommand(LCD_RETURNHOME);
+//      Sends the cursor to the home position
+// Arguments:
+//      None
+void lcdHome(){
+    lcdCommand(LCD_RETURNHOME);
     delay(1000);
 }
 
-void LCDSetCursor(uint8_t col, uint8_t row){
+
+// Description:
+//      Sets the cursor to the desired position
+// Arguments:
+//      col (uint8_t): The column to set the cursor to
+//      row (uint8_t): The row to set the cursor to
+void lcdSetCursor(uint8_t col, uint8_t row){
     uint8_t rowOffsets[] = {0x00, 0x40};
-    LCDCommand(LCD_SETDDRAMADDR | (col + rowOffsets[row]));
+    lcdCommand(LCD_SETDDRAMADDR | (col + rowOffsets[row]));
 }
 
 
@@ -94,25 +110,87 @@ void LCDSetCursor(uint8_t col, uint8_t row){
 //      Turns the backlight on or off
 // Arguments:
 //      status (uint8_t): The value to set the backlight to
-void LCDSetBacklight(uint8_t status){
-    LCDSetPin(7, status);
+void lcdSetBacklight(uint8_t status){
+    lcdSetPin(7, status);
 }
 
-void LCDDisplay(){
+
+// Description:
+//      Turns the display on
+// Arguments:
+//      None
+void lcdDisplay(){
     displayControl |= LCD_DISPLAYON;
-    LCDCommand(LCD_DISPLAYCONTROL | displayControl);
+    lcdCommand(LCD_DISPLAYCONTROL | displayControl);
 }
+
+
+// Description:
+//      Turns on or off the underline cursor
+// Arguments:
+//      state (uint8_t): 1 to enable the cursor, 0 to disable
+void lcdCursor(uint8_t state){
+    if(state == 1){
+        displayControl |= LCD_CURSORON;
+    }else{
+        displayControl &= ~(LCD_CURSORON);
+    }
+    lcdCommand(LCD_DISPLAYCONTROL | displayControl);
+}
+
+
+// Description:
+//      Turns on or off the blinking cursor
+// Arguments:
+//      state (uint8_t): 1 to enable the cursor, 0 to disable
+void lcdCursorBlink(uint8_t state){
+    if(state == 1){
+        displayControl |= LCD_BLINKON;
+    }else{
+        displayControl &= ~(LCD_BLINKON);
+    }
+    lcdCommand(LCD_DISPLAYCONTROL | displayControl);
+}
+
+
+// Descripption:
+//      Creates a custom character for the lcd
+// Arguments:
+//      location (uint8_t): The location to store the character
+//      charMap (uint8_t *): An array holding the custom character data. Can be
+//                           generated here: https://www.quinapalus.com/hd44780udg.html
+// charMap Layout:
+//      0x10 0x08 0x04 0x02 0x01
+//         x    x    x    x    x    charMap[0]
+//         x    x    x    x    x    CharMap[1]
+//         x    x    x    x    x    ...
+//         x    x    x    x    x    ...
+//         x    x    x    x    x    ...
+//         x    x    x    x    x    ...
+//         x    x    x    x    x    ...
+//         x    x    x    x    x    charMap[7]
+void lcdCreateChar(uint8_t location, uint8_t * charMap){
+    // only 7 locations available so mask
+    location &= 0x07;
+    lcdCommand(LCD_SETCGRAMADDR | (location << 3));
+    uint8_t i;
+    for(i = 0; i < 8; i++){
+        lcdWrite(charMap[i]);
+    }
+}
+
+
+//---------------------------- Internal Commands ----------------------------//
 
 // Description:
 //      Wrappers for sending commands or data to the lcd
 // Arguments:
 //      value (uint8_t): The command or data to send to the lcd
-inline void LCDCommand(uint8_t value){
-    LCDSend(value, 0);
+inline void lcdCommand(uint8_t value){
+    lcdSend(value, 0);
 }
-
-inline void LCDWrite(uint8_t value){
-    LCDSend(value, 1);
+inline void lcdWrite(uint8_t value){
+    lcdSend(value, 1);
 }
 
 // Description:
@@ -120,13 +198,13 @@ inline void LCDWrite(uint8_t value){
 // Arguments:
 //      pin (uint8_t): The pin to change the value of
 //      value (uint8_t): The value to write to the pin
-void LCDSetPin(uint8_t pin, uint8_t value){
+void lcdSetPin(uint8_t pin, uint8_t value){
     if(value == 1){
         spiBuf |= (1 << pin);
     }else{
         spiBuf &= ~(1 << pin);
     }
-    SPITransfer(spiBuf, csPort, csPin);
+    spiTransfer(spiBuf, csPort, csPin);
 }
 
 
@@ -134,10 +212,10 @@ void LCDSetPin(uint8_t pin, uint8_t value){
 //      Pulses the enable pin on the lcd
 // Arguments:
 //      None
-void LCDPulse(){
-    LCDSetPin(ENABLE_PIN, 0);
-    LCDSetPin(ENABLE_PIN, 1);
-    LCDSetPin(ENABLE_PIN, 0);
+void lcdPulse(){
+    lcdSetPin(ENABLE_PIN, 0);
+    lcdSetPin(ENABLE_PIN, 1);
+    lcdSetPin(ENABLE_PIN, 0);
     // delay roughly 45us
     delay(15);
 }
@@ -147,11 +225,11 @@ void LCDPulse(){
 //      Writes a 4 bit value to the lcd
 // Arguments:
 //      value (uint8_t): The value to write to the pins
-void LCDWrite4Bits(uint8_t value){
+void lcdWrite4Bits(uint8_t value){
     for(uint8_t i = 0; i < 4; i++){
-        LCDSetPin(dataPins[i], (value >> i) & 0x01);
+        lcdSetPin(dataPins[i], (value >> i) & 0x01);
     }
-    LCDPulse();
+    lcdPulse();
 }
 
 
@@ -160,8 +238,8 @@ void LCDWrite4Bits(uint8_t value){
 // Arguments:
 //      value (uint8_t): The value to send to the lcd
 //      mode (uint8_t): 0 for command or 1 for data
-void LCDSend(uint8_t value, uint8_t mode){
-    LCDSetPin(RS_PIN, mode);
-    LCDWrite4Bits(value >> 4);
-    LCDWrite4Bits(value);
+void lcdSend(uint8_t value, uint8_t mode){
+    lcdSetPin(RS_PIN, mode);
+    lcdWrite4Bits(value >> 4);
+    lcdWrite4Bits(value);
 }

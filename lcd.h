@@ -50,23 +50,29 @@
 #define LCD_1LINE 0x00
 #define LCD_5x10DOTS 0x04
 #define LCD_5x8DOTS 0x00
+// 4 bit mode, 2 line, 5x8 dots
+#define DISPLAY_FUNCTION 0x08
 
 
-void LCDInit(volatile uint8_t * lcdPort, uint8_t lcdPin);
-void LCDSetPin(uint8_t pin, uint8_t value);
-void LCDSetBacklight(uint8_t status);
-void LCDPulse();
-void LCDWrite4Bits(uint8_t value);
-void LCDSend(uint8_t value, uint8_t mode);
-void LCDCommand(uint8_t value);
-void LCDWrite(uint8_t value);
+// user commands
+void lcdInit(volatile uint8_t * lcdPort, uint8_t lcdPin);
+void lcdPrint(uint8_t * data, uint8_t length);
+void lcdClear();
+void lcdHome();
+void lcdSetCursor(uint8_t col, uint8_t row);
+void lcdSetBacklight(uint8_t status);
+void lcdDisplay();
+void lcdCursor(uint8_t state);
+void lcdCursorBlink(uint8_t state);
+void lcdCreateChar(uint8_t location, uint8_t * charMap);
 
-void LCDClear();
-void LCDHome();
-void LCDSetCursor(uint8_t col, uint8_t row);
-void LCDDisplay();
-
-void LCDPrint(uint8_t * data, uint8_t length);
+// internal commands
+void lcdSetPin(uint8_t pin, uint8_t value);
+void lcdPulse();
+void lcdWrite4Bits(uint8_t value);
+void lcdSend(uint8_t value, uint8_t mode);
+void lcdCommand(uint8_t value);
+void lcdWrite(uint8_t value);
 
 
 #endif /* LCD_H_ */

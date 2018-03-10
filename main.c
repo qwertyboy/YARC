@@ -12,10 +12,10 @@
 
 int main(void){
     // enable spi
-    SPIInit(SPI_CLKDIV_2);
+    spiInit(SPI_CLKDIV_2);
     // enable lcd
-    LCDInit(&PORTB, PORTB2);
-    LCDPrint("henlo :3c", 9);
+    lcdInit(&PORTB, PORTB2);
+    lcdPrint("henlo :3c", 9);
     
     while(1){
     }

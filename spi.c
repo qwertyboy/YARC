@@ -15,7 +15,7 @@
 //      speed (uint8_t): The clock speed to run the bus at
 // Returns:
 //      none
-void SPIInit(uint8_t speed){
+void spiInit(uint8_t speed){
     // disable interrupts
     //SREG &= ~(1 << SREG_I);
     
@@ -46,7 +46,7 @@ void SPIInit(uint8_t speed){
 //      csPin (uint8_t): The cs pin number
 // Returns:
 //      uint8_t: The data received from the slave device
-uint8_t SPITransfer(uint8_t data, volatile uint8_t * csPort, uint8_t csPin){
+uint8_t spiTransfer(uint8_t data, volatile uint8_t * csPort, uint8_t csPin){
     // set cs pin low
     *csPort &= ~(1 << csPin);
     // send data
