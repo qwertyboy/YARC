@@ -70,12 +70,15 @@ void LCDPrint(uint8_t * data, uint8_t length){
     }
 }
 
-
+// Description:
+//      Clears the lcd
 void LCDClear(){
     LCDCommand(LCD_CLEARDISPLAY);
     delay(1000);
 }
 
+// Description:
+//
 void LCDHome(){
     LCDCommand(LCD_RETURNHOME);
     delay(1000);
