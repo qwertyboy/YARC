@@ -27,7 +27,7 @@ int main(void){
     
     delay(500000);
     uint8_t printBuf[32];
-    lcdPrint("Hello!", 6);
+    lcdPrint("Hello!");
     delay(500000);
     
     while(1){
@@ -35,9 +35,9 @@ int main(void){
         lcdClear();
         lcdSetCursor(0, 0);
         itoa(temp, printBuf, 10);
-        lcdPrint(printBuf, 4);
+        lcdPrint(printBuf);
         lcdWrite(0);
-        lcdPrint("C", 1);
+        lcdPrint("C");
         delay(200000);
     }
 }

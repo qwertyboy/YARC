@@ -66,13 +66,10 @@ void lcdInit(volatile uint8_t * port, uint8_t pin){
 //      Prints text to the lcd
 // Arguments:
 //      data (uint8_t *): A pointer to the text to print
-//      length (uint8_t): The length of the string to print
-void lcdPrint(uint8_t * data, uint8_t length){
+void lcdPrint(uint8_t * data){
     uint8_t i = 0;
     while(data[i] != '\0'){
-        //lcdWrite(*data++);
         lcdWrite(data[i++]);
-        length--;
     }
 }
 
