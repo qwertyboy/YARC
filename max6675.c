@@ -10,25 +10,23 @@
 #include "spi.h"
 
 // spi pins
-volatile uint8_t * csPort;
-uint8_t csPin;
+volatile uint8_t * maxPort;
+uint8_t maxPin;
 
 
-void max6675Init(volatile uint8_t * maxPort, uint8_t maxPin){
+void max6675Init(volatile uint8_t * port, uint8_t pin){
     // copy the port and pin
-    csPort = maxPort;
-    csPin = maxPin;
+    maxPort = port;
+    maxPin = pin;
 }
 
 
 // probably wont work until spiTransfer is modified for multiple bytes
 int16_t max6675Read(){
-    uint8_t highByte = spiTransfer(0x00, csPort, csPin);
-    uint8_t lowByte = spiTransfer(0x00, csPort, csPin);
-    uint16_t result = ((highByte | lowByte) >> 3) & 0xFFF;
-    if(lowByte & THERMOCOUPLE_OPEN){
+    uint16_t result = spiTransfer16(0, maxPort, maxPin);
+    if(result & THERMOCOUPLE_OPEN){
         return -1;
     }else{
-        return result;
+        return (result >> 3) & 0xFFF;
     }
 }

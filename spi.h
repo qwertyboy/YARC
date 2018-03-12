@@ -19,5 +19,6 @@
 
 void spiInit(uint8_t speed);
 uint8_t spiTransfer(uint8_t data, volatile uint8_t * csPort, uint8_t csPin);
+uint16_t spiTransfer16(uint16_t data, volatile uint8_t * csPort, uint8_t csPin);
 
 #endif /* SPI_H_ */

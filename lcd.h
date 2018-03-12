@@ -55,7 +55,7 @@
 
 
 // user commands
-void lcdInit(volatile uint8_t * lcdPort, uint8_t lcdPin);
+void lcdInit(volatile uint8_t * port, uint8_t pin);
 void lcdPrint(uint8_t * data, uint8_t length);
 void lcdClear();
 void lcdHome();

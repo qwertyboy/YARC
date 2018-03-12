@@ -6,6 +6,7 @@
  */ 
 
 #include <avr/io.h>
+#include <stdlib.h>
 #include "utils.h"
 #include "spi.h"
 #include "lcd.h"
@@ -18,11 +19,25 @@ int main(void){
     spiInit(SPI_CLKDIV_2);
     // enable lcd
     lcdInit(&PORTB, PORTB2);
+    uint8_t degSymbol[] =  {0xc,0x12,0x12,0xc,0x0,0x0,0x0};
+    lcdCreateChar(0, degSymbol);
     // enable max6675
     max6675Init(&PORTB, PORTB1);
     
-    lcdPrint("henlo :3c", 9);
+    
+    delay(500000);
+    uint8_t printBuf[32];
+    lcdPrint("Hello!", 6);
+    delay(500000);
     
     while(1){
+        int16_t temp = max6675Read() / 4;
+        lcdClear();
+        lcdSetCursor(0, 0);
+        itoa(temp, printBuf, 10);
+        lcdPrint(printBuf, 4);
+        lcdWrite(0);
+        lcdPrint("C", 1);
+        delay(200000);
     }
 }

@@ -11,7 +11,7 @@
 
 #define THERMOCOUPLE_OPEN 0x04
 
-void max6675Init(volatile uint8_t * maxPort, uint8_t maxPin);
+void max6675Init(volatile uint8_t * port, uint8_t pin);
 int16_t max6675Read();
 
 #endif /* MAX6675_H_ */

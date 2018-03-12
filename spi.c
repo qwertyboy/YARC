@@ -58,3 +58,32 @@ uint8_t spiTransfer(uint8_t data, volatile uint8_t * csPort, uint8_t csPin){
     return SPDR;
 }
 
+
+// Description:
+//      Does a 16 bit transfer over spi
+// Arguments:
+//      data (uint16_t): The data to send
+//      csPort (uint8_t *): The address of the cs port
+//      csPin (uint8_t): The cs pin number
+// Returns:
+//      uint16_t: The data received from the slave device
+uint16_t spiTransfer16(uint16_t data, volatile uint8_t * csPort, uint8_t csPin){
+    // set cs pin low
+    *csPort &= ~(1 << csPin);
+    // send high byte
+    SPDR = (data >> 8) & 0xFF;
+    // wait for transmission to complete
+    while(!(SPSR & (1 << SPIF)));
+    // store first byte
+    uint16_t msb = SPDR;
+    // send low byte
+    SPDR = data & 0xFF;
+    // wait for transmission to complete
+    while(!(SPSR & (1 << SPIF)));
+    // set cs pin high
+    *csPort |= (1 << csPin);
+    // store second byte
+    uint16_t lsb = SPDR;
+    // combine and return
+    return (msb << 8) | lsb;
+}

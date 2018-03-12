@@ -11,8 +11,8 @@
 #include "spi.h"
 
 // spi pins
-volatile uint8_t * csPort;
-uint8_t csPin;
+volatile uint8_t * lcdPort;
+uint8_t lcdPin;
 uint8_t spiBuf = 0x80;
 
 // lcd pins
@@ -29,10 +29,10 @@ uint8_t displayMode = 0;
 // Arguments:
 //      lcdPort (uint8_t *): A pointer to the port the lcd's cs pin is on
 //      lcdPin (uint8_t): The pin the lcd's cs pin is connected to
-void lcdInit(volatile uint8_t * lcdPort, uint8_t lcdPin){
+void lcdInit(volatile uint8_t * port, uint8_t pin){
     // copy the port and pin for cs
-    csPort = lcdPort;
-    csPin = lcdPin;
+    lcdPort = port;
+    lcdPin = pin;
     
     // backlight command
     //spiBuf = 0x80;
@@ -68,8 +68,10 @@ void lcdInit(volatile uint8_t * lcdPort, uint8_t lcdPin){
 //      data (uint8_t *): A pointer to the text to print
 //      length (uint8_t): The length of the string to print
 void lcdPrint(uint8_t * data, uint8_t length){
-    while(length > 0){
-        lcdWrite(*data++);
+    uint8_t i = 0;
+    while(data[i] != '\0'){
+        //lcdWrite(*data++);
+        lcdWrite(data[i++]);
         length--;
     }
 }
@@ -204,7 +206,7 @@ void lcdSetPin(uint8_t pin, uint8_t value){
     }else{
         spiBuf &= ~(1 << pin);
     }
-    spiTransfer(spiBuf, csPort, csPin);
+    spiTransfer(spiBuf, lcdPort, lcdPin);
 }
 
 
@@ -214,7 +216,9 @@ void lcdSetPin(uint8_t pin, uint8_t value){
 //      None
 void lcdPulse(){
     lcdSetPin(ENABLE_PIN, 0);
+    delay(1);
     lcdSetPin(ENABLE_PIN, 1);
+    delay(1);
     lcdSetPin(ENABLE_PIN, 0);
     // delay roughly 45us
     delay(15);
