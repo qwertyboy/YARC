@@ -11,6 +11,7 @@
 #include "spi.h"
 #include "lcd.h"
 #include "max6675.h"
+#include "encoder.h"
 
 int main(void){
     // set cs pins as output
@@ -23,21 +24,23 @@ int main(void){
     lcdCreateChar(0, degSymbol);
     // enable max6675
     max6675Init(&PORTB, PORTB1);
+    // initialize encoder
+    encoderInit(&PORTC, PORTC0, PORTC1);
     
     
-    delay(500000);
     uint8_t printBuf[32];
+    lcdClear();
+    lcdClear();
     lcdPrint("Hello!");
     delay(500000);
     
     while(1){
-        int16_t temp = max6675Read() / 4;
+        int32_t pos = encoderRead();
         lcdClear();
         lcdSetCursor(0, 0);
-        itoa(temp, printBuf, 10);
+        lcdPrint("position: ");
+        itoa(pos, printBuf, 10);
         lcdPrint(printBuf);
-        lcdWrite(0);
-        lcdPrint("C");
         delay(200000);
     }
 }
