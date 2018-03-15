@@ -9,43 +9,37 @@
 #include <avr/interrupt.h>
 #include "encoder.h"
 
-uint8_t encPinA, encPinB = 0;
+uint8_t encPinA = 0;
+uint8_t encPinB = 0;
+
+// interrupt variables
 volatile int32_t encPos = 0;
+volatile uint8_t state = 0;
+const int8_t stateTable[] = {0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0};
+
 
 // Handles PORTB
 ISR(PCINT0_vect){
-    // check which pin interrupt occurred on
-    if(PINB & (1 << encPinA)){
-        // pin A went low first so encoder is turning clockwise
-        encPos++;
-    }else{
-        // pin B went low first so ccw
-        encPos--;
-    }
+    state = state << 2;                                 // move old data over
+    state |= (PINB & (1 << encPinA)) >> encPinA;        // OR the A bit
+    state |= ((PINB & (1 << encPinB)) >> encPinB) << 1; // OR the B bit
+    encPos += stateTable[(state & 0x0F)];  // get the change from the entry table
 }
 
 // Handles PORTC
 ISR(PCINT1_vect){
-    // check which pin interrupt occurred on
-    if(PINC & (1 << encPinA)){
-        // pin A went low first so encoder is turning clockwise
-        encPos++;
-        }else{
-        // pin B went low first so ccw
-        encPos--;
-    }
+    state = state << 2;                                 // move old data over
+    state |= (PINC & (1 << encPinA)) >> encPinA;        // OR the A bit
+    state |= ((PINC & (1 << encPinB)) >> encPinB) << 1; // OR the B bit
+    encPos += stateTable[(state & 0x0F)];  // get the change from the entry table
 }
 
 // Handles PORTD
 ISR(PCINT2_vect){
-    // check which pin interrupt occurred on
-    if(PIND & (1 << encPinA)){
-        // pin A went low first so encoder is turning clockwise
-        encPos++;
-        }else{
-        // pin B went low first so ccw
-        encPos--;
-    }
+    state = state << 2;                                 // move old data over
+    state |= (PIND & (1 << encPinA)) >> encPinA;        // OR the A bit
+    state |= ((PIND & (1 << encPinB)) >> encPinB) << 1; // OR the B bit
+    encPos += stateTable[(state & 0x0F)];  // get the change from the entry table
 }
 
 

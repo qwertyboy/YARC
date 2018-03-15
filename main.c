@@ -16,6 +16,9 @@
 int main(void){
     // set cs pins as output
     DDRB |= (1 << DDB2) | (1 << DDB1);
+    // led on PD0
+    DDRD |= (1 << DDD0);
+    
     // enable spi
     spiInit(SPI_CLKDIV_2);
     // enable lcd
@@ -36,6 +39,7 @@ int main(void){
     
     while(1){
         int32_t pos = encoderRead();
+        
         lcdClear();
         lcdSetCursor(0, 0);
         lcdPrint("position: ");
