@@ -6,14 +6,135 @@
  */ 
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
+#include "utils.h"
+
+
+#define MILLIS_INC  2.048
+#define FRACT_INC   6
+#define FRACT_MAX   125
+
+volatile uint32_t timerOverflowCount = 0;
+volatile uint32_t timerMillis = 0;
+static uint8_t timerFract = 0;
+
+
+ISR(TIMER0_OVF_vect){
+    uint32_t m = timerMillis;
+    uint8_t f = timerFract;
+    
+    m += MILLIS_INC;
+    f += FRACT_INC;
+    if(f >= FRACT_MAX){
+        f -= FRACT_MAX;
+        m += 1;
+    }
+    
+    timerFract = f;
+    timerMillis = m;
+    timerOverflowCount++;
+}
+
 
 // Description:
-//      Does nothing for the specified number of ticks. Does not seem to be linear
+//      Initializes the timer for timekeeping. Must be called for delays to work!
 // Arguments:
-//      ticks (uint32_t): The number of times to loop
-void delay(volatile uint32_t ticks){
-    uint32_t i;
-    for(i = 0; i < ticks; i++);
+//      None
+void timerInit(void){
+    // enable interrupts
+    sei();
+    // fast pwm, probably not needed for this application (not arduino)
+    TCCR0A |= (1 << WGM01) | (1 << WGM00);
+    // clk/64
+    TCCR0B |= (1 << CS01) | (1 << CS00);
+    // enable overflow interrupt
+    TIMSK0 |= (1 << TOIE0);
+}
+
+
+// Description:
+//      Gets the current number of milliseconds since the program started
+// Arguments:
+//      None
+// Returns:
+//      The number of milliseconds since the program started
+uint32_t millis(void){
+    uint32_t m;
+    uint8_t oldSREG = SREG;
+    
+    cli();
+    m = timerMillis;
+    SREG = oldSREG;
+    
+    return m;
+}
+
+
+// Description:
+//      Gets the current number of microseconds since the program started
+// Arguments:
+//      None
+// Returns:
+//      The number of microseconds since the program started
+uint32_t micros(void){
+    uint32_t m;
+    uint8_t oldSREG = SREG, t;
+    
+    cli();
+    m = timerOverflowCount;
+    t = TCNT0;
+    
+    if((TIFR0 & (1 << TOV0)) && (t < 255)){
+        m++;
+    }
+    
+    SREG = oldSREG;
+    
+    return ((m << 8) + t) * 8;
+}
+
+
+// Description:
+//      Does nothing for the specified number of milliseconds
+// Arguments:
+//      ms (uint32_t): The number of milliseconds to wait
+void delay(uint32_t ms){
+    uint32_t start = micros();
+    
+    while(ms > 0){
+        while(ms > 0 && (micros() - start) >= 1000){
+            ms--;
+            start += 1000;
+        }
+    }
+}
+
+
+// Description:
+//      Delays the specified number of microseconds
+// Arguments:
+//      us (uint32_t): The number of microseconds to delay for
+void delayMicro(uint32_t us){
+    // for a 1 and 2 microsecond delay, simply return.  the overhead
+    // of the function call takes 14 (16) cycles, which is 2us
+    if (us <= 2) return; //  = 3 cycles, (4 when true)
+
+    // the following loop takes 1/2 of a microsecond (4 cycles)
+    // per iteration, so execute it twice for each microsecond of
+    // delay requested.
+    us <<= 1; //x2 us, = 2 cycles
+
+    // account for the time taken in the preceeding commands.
+    // we just burned 17 (19) cycles above, remove 4, (4*4=16)
+    // us is at least 6 so we can substract 4
+    us -= 4; // = 2 cycles
+    
+    // busy wait
+    __asm__ __volatile__ (
+    "1: sbiw %0,1" "\n\t" // 2 cycles
+    "brne 1b" : "=w" (us) : "0" (us) // 2 cycles
+    );
+    // return = 4 cycles
 }
 
 

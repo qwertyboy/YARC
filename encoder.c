@@ -3,6 +3,8 @@
  *
  * Created: 3/12/2018 5:55:12 PM
  *  Author: Nathan
+ *
+ *  Using the method described here to to decoding: http://www.mkesc.co.uk/ise.pdf
  */ 
 
 #include <avr/io.h>
@@ -92,5 +94,15 @@ void encoderInit(volatile uint8_t * port, uint8_t pinA, uint8_t pinB){
 // Returns:
 //      int32_t: The current encoder position
 int32_t encoderRead(void){
-    return encPos;
+    if(encPos != 0){
+        return (encPos - 2) / 4;
+    }else{
+        return encPos;
+    }        
+}
+
+
+//
+void encoderZero(void){
+    encPos = 0;
 }

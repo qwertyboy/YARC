@@ -37,15 +37,18 @@ void lcdInit(volatile uint8_t * port, uint8_t pin){
     // backlight command
     //spiBuf = 0x80;
     // delay roughly 50ms for lcd to start up
-    delay(25000);
+    delay(50);
     // pull rs and enable low to send commands
     lcdSetPin(RS_PIN, 0);
     lcdSetPin(ENABLE_PIN, 0);
     
     // set 4 bit mode
     lcdWrite4Bits(0x03);
+    delay(4);
     lcdWrite4Bits(0x03);
+    delay(4);
     lcdWrite4Bits(0x03);
+    delayMicro(150);
     lcdWrite4Bits(0x02);
     
     // set line number
@@ -80,7 +83,7 @@ void lcdPrint(uint8_t * data){
 //      None
 void lcdClear(){
     lcdCommand(LCD_CLEARDISPLAY);
-    delay(1000);
+    delay(2);
 }
 
 
@@ -90,7 +93,7 @@ void lcdClear(){
 //      None
 void lcdHome(){
     lcdCommand(LCD_RETURNHOME);
-    delay(1000);
+    delay(2);
 }
 
 
@@ -152,7 +155,7 @@ void lcdCursorBlink(uint8_t state){
 }
 
 
-// Descripption:
+// Description:
 //      Creates a custom character for the lcd
 // Arguments:
 //      location (uint8_t): The location to store the character
@@ -213,12 +216,12 @@ void lcdSetPin(uint8_t pin, uint8_t value){
 //      None
 void lcdPulse(){
     lcdSetPin(ENABLE_PIN, 0);
-    delay(1);
+    delayMicro(1);
     lcdSetPin(ENABLE_PIN, 1);
-    delay(1);
+    delayMicro(1);
     lcdSetPin(ENABLE_PIN, 0);
     // delay roughly 45us
-    delay(15);
+    delayMicro(50);
 }
 
 
