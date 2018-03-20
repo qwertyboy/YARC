@@ -138,6 +138,50 @@ void delayMicro(uint32_t us){
 }
 
 
+//
+uint8_t buttonRead(volatile uint8_t * pinx, uint8_t pin, uint16_t shortTimeout, uint16_t longTimeout){
+    static uint8_t pressed = 0;
+    static uint32_t downTime = 0;
+    uint32_t upTime = 0;
+    
+    // check pin
+    if((*pinx & (1 << pin)) == 0){
+        if(!pressed){
+            // set flag on press to get time
+            pressed = 1;
+            downTime = millis();
+        }
+
+        // return if passed long timeout and still held
+        if(millis() - downTime >= longTimeout){
+            return 2;
+        }
+    }else{
+        if(pressed){
+            // reset flag
+            pressed = 0;
+            // get release time if button was pressed
+            upTime = millis();
+            
+            // determine what kind of press happened
+            if(upTime - downTime >= longTimeout){
+                // reset downTime to prevent returning long press
+                downTime = 0;
+                return 2;
+            }else if(upTime - downTime >= shortTimeout){
+                // reset downTime to prevent returning long press
+                downTime = 0;
+                return 1;
+            }else{
+                return 0;
+            }
+        }
+    }
+    // return 0 if nothing returned already
+    return 0;
+}    
+
+
 // Description:
 //      Swaps two numbers
 // Arguments:

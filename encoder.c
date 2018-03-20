@@ -102,7 +102,10 @@ int32_t encoderRead(void){
 }
 
 
-//
-void encoderZero(void){
-    encPos = 0;
+// Description:
+//      Sets the encoder position manually
+// Arguments:
+//      pos (int32_t): The position to set the encoder to
+void encoderSetPos(int32_t pos){
+    encPos = pos * 4;
 }

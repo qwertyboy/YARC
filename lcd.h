@@ -56,7 +56,7 @@
 
 // user commands
 void lcdInit(volatile uint8_t * port, uint8_t pin);
-void lcdPrint(uint8_t * data);
+void lcdPrint(const char * data);
 void lcdClear();
 void lcdHome();
 void lcdSetCursor(uint8_t col, uint8_t row);

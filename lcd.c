@@ -69,10 +69,15 @@ void lcdInit(volatile uint8_t * port, uint8_t pin){
 //      Prints text to the lcd
 // Arguments:
 //      data (uint8_t *): A pointer to the text to print
-void lcdPrint(uint8_t * data){
+void lcdPrint(const char * data){
     uint8_t i = 0;
     while(data[i] != '\0'){
-        lcdWrite(data[i++]);
+        if(data[i] == '\n'){
+            lcdSetCursor(0, 1);
+            i++;
+        }else{
+            lcdWrite(data[i++]);
+        }        
     }
 }
 

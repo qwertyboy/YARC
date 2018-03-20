@@ -11,6 +11,6 @@
 
 void encoderInit(volatile uint8_t * port, uint8_t pinA, uint8_t pinB);
 int32_t encoderRead(void);
-void encoderZero(void);
+void encoderSetPos(int32_t pos);
 
 #endif /* ENCODER_H_ */

@@ -14,6 +14,7 @@ uint32_t millis(void);
 uint32_t micros(void);
 void delay(uint32_t ms);
 void delayMicro(uint32_t us);
+uint8_t buttonRead(volatile uint8_t * pinx, uint8_t pin, uint16_t shortTimeout, uint16_t longTimeout);
 
 void swap(uint8_t * a, uint8_t * b);
 void reverse(uint8_t * str, uint8_t len);
