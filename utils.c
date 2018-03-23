@@ -138,7 +138,17 @@ void delayMicro(uint32_t us){
 }
 
 
-//
+// Description:
+//      Reads the status of a button connected with a pull-up resistor.
+// Arguments:
+//      pinx (uint8_t *): A pointer to the PINx register the button is connected to
+//      pin (uint8_t): The pin number the button is connected to
+//      shortTimeout (uint16_t): The number of ms to wait before a short button press is valid
+//      longTimeout (uint16_t): The number of ms to wait before a long button press is registered.
+// Returns:
+//      0 if the button is not pressed or has not passed either timeout
+//      1 if button is pressed for longer than the short timeout and less than the long timeout
+//      2 if the button is pressed for longer than the long timeout
 uint8_t buttonRead(volatile uint8_t * pinx, uint8_t pin, uint16_t shortTimeout, uint16_t longTimeout){
     static uint8_t pressed = 0;
     static uint32_t downTime = 0;
