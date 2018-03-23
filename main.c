@@ -50,30 +50,37 @@ int main(void){
     
     // misc loop variables
     uint8_t printBuf[32];   // buffer for printing to lcd
+    int16_t encoderPos = 0;
+    int16_t lastEncPos = -1;
     
-    lcdPrint("Current profile:");
-    while(1){        
-        uint8_t pressType = buttonRead(&PINC, PINC2, 50, 1000);
-        
-        if(pressType == 1){
-            lcdSetCursor(0, 1);
-            lcdPrint("                ");
-            lcdSetCursor(0, 1);
-            lcdPrint("Short");
-            delay(500);
-        }else if(pressType == 2){
-            lcdSetCursor(0, 1);
-            lcdPrint("                ");
-            lcdSetCursor(0, 1);
-            lcdPrint("Long");
-            //delay(1000);
-        }else{
-            lcdSetCursor(0, 1);
-            lcdPrint("                ");
-            lcdSetCursor(0, 1);
-            lcdPrint("None");
+    // profile vars
+    Profile_t profile;
+    
+    // wait for button to select a profile.
+    lcdPrint("Select Profile:");
+    while(buttonRead(&PINC, PINC2, 50, 1000) != 1){
+        // read encoder
+        encoderPos = encoderRead();
+        // check lower bound
+        if(encoderPos < 0){
+            encoderPos = 0;
+            encoderSetPos(0);
         }
         
-        delay(100);
+        // get the profile selected by the encoder
+        profile = Profiles[encoderPos % 2];
+        // update display if encoder changed
+        if(encoderPos != lastEncPos){
+            lastEncPos = encoderPos;
+            lcdSetCursor(1, 1);
+            lcdPrint("         ");  // clear line
+            lcdSetCursor(1, 1);
+            lcdPrint(profile.profileName);
+        }
+    }
+    
+    while(1){           
+        
+        //delay(100);
     }
 }
