@@ -9,21 +9,21 @@
 #ifndef MENU_H_
 #define MENU_H_
 
+#define NUM_PROFILES        2
 #define MAIN_MENU_LEN       2
-#define PROFILE_MENU_LEN    2
 #define PROFILE_OPTIONS_LEN 5
 // inputs to change menu levels
 #define MENU_NEXT_LEVEL     1
 #define MENU_PREV_LEVEL     2
 // menu states
-#define STATE_MAIN          0
-#define STATE_SETTINGS      1
-#define STATE_LIST_PROFILES 2
-#define STATE_EDIT_PROFILE  3
-#define STATE_CHANGE_UNITS  4
+#define MENU_STATE_MAIN          0
+#define MENU_STATE_SETTINGS      1
+#define MENU_STATE_LIST_PROFILES 2
+#define MENU_STATE_EDIT_PROFILE  3
+#define MENU_STATE_CHANGE_UNITS  4
 
 typedef struct Profile{
-    const uint8_t * profileName;
+    const char * profileName;
     uint16_t preHeatTime;
     uint16_t preHeatTemp;
     uint16_t soakTime;
@@ -43,5 +43,6 @@ typedef struct MenuLevel{
 
 
 extern const Profile_t Profiles[];
+extern const char * PhaseText[];
 
 #endif /* MENU_H_ */
