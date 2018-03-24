@@ -15,7 +15,22 @@
 #include "encoder.h"
 #include "menu.h"
 
+// process states
+#define STATE_PREHEAT   0
+#define STATE_SOAK      1
+#define STATE_REFLOW    2
+#define STATE_COOLDOWN  3
+
+// PID constants
+#define PID_KP 1
+#define PID_KI 1
+#define PID_KD 1
+
+// misc variables
+char printBuf[16];
+
 int main(void){
+    //-----------------------------Initialization----------------------------//
     // enable timer0 for timekeeping
     timerInit();
     
@@ -43,44 +58,95 @@ int main(void){
     // initialize encoder
     encoderInit(&PORTC, PORTC1, PORTC0);
     
+    //---------------------------End Initialization--------------------------//
     
     lcdPrint("   YetAnother\nReflowController");
     delay(2000);
     lcdClear();
     
-    // misc loop variables
-    uint8_t printBuf[32];   // buffer for printing to lcd
-    int16_t encoderPos = 0;
-    int16_t lastEncPos = -1;
-    
     // profile vars
-    Profile_t profile;
+    Profile_t profile = Profiles[0];    // default to lead
     
     // wait for button to select a profile.
     lcdPrint("Select Profile:");
     while(buttonRead(&PINC, PINC2, 50, 1000) != 1){
         // read encoder
-        encoderPos = encoderRead();
-        // check lower bound
+        int16_t encoderPos = encoderRead();
+        static int16_t lastEncPos = -1;
+        
+        // check bounds
         if(encoderPos < 0){
             encoderPos = 0;
             encoderSetPos(0);
+        }else if(encoderPos > NUM_PROFILES - 1){
+            encoderPos = NUM_PROFILES - 1;
+            encoderSetPos(NUM_PROFILES);
         }
         
         // get the profile selected by the encoder
-        profile = Profiles[encoderPos % 2];
+        profile = Profiles[encoderPos];
         // update display if encoder changed
         if(encoderPos != lastEncPos){
             lastEncPos = encoderPos;
             lcdSetCursor(1, 1);
-            lcdPrint("         ");  // clear line
+            lcdPrint("                ");  // clear line
             lcdSetCursor(1, 1);
             lcdPrint(profile.profileName);
         }
     }
     
-    while(1){           
+    // display selected profile and wait for button to be held
+    lcdClear();
+    lcdPrint("Profile: ");
+    lcdPrint(profile.profileName);
+    lcdSetCursor(0, 1);
+    lcdPrint("Hold start...");
+    
+    // blink button while waiting
+    uint32_t blinkTime = 0;
+    while(buttonRead(&PINC, PINC2, 50, 1000) != 2){
+        if(millis() - blinkTime >= 1000){
+            blinkTime = millis();
+            PIND |= (1 << PIND0);
+        }
+    }
+    
+    lcdClear();
+    lcdPrint("Phase: ");
+    while(1){
+        static uint8_t phase = 0;
+        static uint32_t loop10hz = 0;
+        // pid variables
+        static uint16_t ovenTemp = 0;
+        static int16_t pidError = 0;
+        static int16_t pidLastError = 0;
+        static int16_t pidIntegral = 0;
+        static int16_t pidDerivative = 0;
+        static int16_t pidOut = 0;
         
-        //delay(100);
+        // 10 hz loop
+        if(millis() - loop10hz >= 100){
+            loop10hz = millis();
+            // update lcd
+            lcdSetCursor(7, 0);
+            lcdPrint("        ");
+            lcdSetCursor(7, 0);
+            lcdPrint(PhaseText[phase]);
+            
+            // update PID parameters
+            ovenTemp = max6675Read() / 4;
+            pidError = profile.preHeatTemp - ovenTemp;
+            pidIntegral += pidError;
+            pidDerivative = pidError - pidLastError;
+            // update control variable
+            pidOut = (PID_KP * pidError) + (PID_KI * pidIntegral) + (PID_KD * pidDerivative);
+            lcdSetCursor(0, 1);
+            lcdPrint("p:");
+            itoa(pidOut, printBuf, 10);
+            lcdPrint(printBuf);
+            lcdPrint(" t:");
+            itoa(ovenTemp, printBuf, 10);
+            lcdPrint(printBuf);
+        }
     }
 }
