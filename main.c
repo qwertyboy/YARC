@@ -22,9 +22,9 @@
 #define STATE_COOLDOWN  3
 
 // PID constants
-#define PID_KP 1
-#define PID_KI 1
-#define PID_KD 1
+#define PID_KP 10
+#define PID_KI 0.1
+#define PID_KD 6.5
 
 // misc variables
 char printBuf[16];
@@ -43,7 +43,7 @@ int main(void){
     PORTC |= (1 << PORTC2);
     
     // enable spi
-    spiInit(SPI_CLKDIV_2);
+    spiInit(SPI_CLKDIV_4);
     // enable lcd
     lcdInit(&PORTB, PORTB2);
     // create a degree symbol
@@ -125,7 +125,7 @@ int main(void){
         static int16_t pidOut = 0;
         
         // 10 hz loop
-        if(millis() - loop10hz >= 100){
+        if(millis() - loop10hz >= 200){
             loop10hz = millis();
             // update lcd
             lcdSetCursor(7, 0);
@@ -134,17 +134,49 @@ int main(void){
             lcdPrint(PhaseText[phase]);
             
             // update PID parameters
+            // calc error
             ovenTemp = max6675Read() / 4;
             pidError = profile.preHeatTemp - ovenTemp;
+            if(pidError < -1000){
+                pidError = -1000;
+            }else if(pidError > 1000){
+                pidError = 1000;
+            }
+            
+            // calc integral
             pidIntegral += pidError;
+            if(pidIntegral < -1000){
+                pidIntegral = -1000;
+            }else if(pidIntegral > 1000){
+                pidIntegral = 1000;
+            }
+            
+            // calc derivative
             pidDerivative = pidError - pidLastError;
+            if(pidDerivative < -1000){
+                pidDerivative = -1000;
+            }else if(pidDerivative > 1000){
+                pidDerivative = 1000;
+            }
+            
             // update control variable
             pidOut = (PID_KP * pidError) + (PID_KI * pidIntegral) + (PID_KD * pidDerivative);
+            if(pidOut < 0){
+                pidOut = 0;
+            }else if(pidOut > 1000){
+                pidOut = 1000;
+            }
+            
+            pidLastError = pidError;
+            
             lcdSetCursor(0, 1);
-            lcdPrint("p:");
+            lcdPrint("p:     ");
+            lcdSetCursor(3, 1);
             itoa(pidOut, printBuf, 10);
             lcdPrint(printBuf);
-            lcdPrint(" t:");
+            lcdSetCursor(8, 1);
+            lcdPrint("t:   ");
+            lcdSetCursor(11, 1);
             itoa(ovenTemp, printBuf, 10);
             lcdPrint(printBuf);
         }
