@@ -15,7 +15,7 @@
 //      speed (uint8_t): The clock speed to run the bus at
 // Returns:
 //      none
-void spiInit(uint8_t speed){
+void SpiInit(uint8_t speed){
     // disable interrupts
     //SREG &= ~(1 << SREG_I);
     
@@ -42,19 +42,13 @@ void spiInit(uint8_t speed){
 //      Sends a byte over SPI and waits for a return
 // Arguments:
 //      data (uint8_t): The data to send
-//      csPort (uint8_t *): The address of the cs port
-//      csPin (uint8_t): The cs pin number
 // Returns:
 //      uint8_t: The data received from the slave device
-uint8_t spiTransfer(uint8_t data, volatile uint8_t * csPort, uint8_t csPin){
-    // set cs pin low
-    *csPort &= ~(1 << csPin);
+uint8_t SpiTransfer(uint8_t data){
     // send data
     SPDR = data;
     // wait for transmission to complete
     while(!(SPSR & (1 << SPIF)));
-    // set cs pin high
-    *csPort |= (1 << csPin);
     return SPDR;
 }
 
@@ -63,27 +57,23 @@ uint8_t spiTransfer(uint8_t data, volatile uint8_t * csPort, uint8_t csPin){
 //      Does a 16 bit transfer over spi
 // Arguments:
 //      data (uint16_t): The data to send
-//      csPort (uint8_t *): The address of the cs port
-//      csPin (uint8_t): The cs pin number
 // Returns:
 //      uint16_t: The data received from the slave device
-uint16_t spiTransfer16(uint16_t data, volatile uint8_t * csPort, uint8_t csPin){
-    // set cs pin low
-    *csPort &= ~(1 << csPin);
+uint16_t SpiTransfer16(uint16_t data){
     // send high byte
     SPDR = (data >> 8) & 0xFF;
     // wait for transmission to complete
     while(!(SPSR & (1 << SPIF)));
     // store first byte
     uint16_t msb = SPDR;
+    
     // send low byte
     SPDR = data & 0xFF;
     // wait for transmission to complete
     while(!(SPSR & (1 << SPIF)));
-    // set cs pin high
-    *csPort |= (1 << csPin);
     // store second byte
     uint16_t lsb = SPDR;
+    
     // combine and return
     return (msb << 8) | lsb;
 }

@@ -47,8 +47,8 @@ const char * PhaseText[] = {
 
 
 void EditPreheatTime(void){
-    lcdClear();
-    lcdPrint(MT_PROFILE_PREHEAT_TIME);
+    LcdClear();
+    LcdPrint(MT_PROFILE_PREHEAT_TIME);
 }
 
 void EditPreheatTarget(void){

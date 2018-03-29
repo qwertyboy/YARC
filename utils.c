@@ -40,7 +40,7 @@ ISR(TIMER0_OVF_vect){
 //      Initializes the timer for timekeeping. Must be called for delays to work!
 // Arguments:
 //      None
-void timerInit(void){
+void TimerInit(void){
     // enable interrupts
     sei();
     // fast pwm, probably not needed for this application (not arduino)
@@ -58,7 +58,7 @@ void timerInit(void){
 //      None
 // Returns:
 //      The number of milliseconds since the program started
-uint32_t millis(void){
+uint32_t Millis(void){
     uint32_t m;
     uint8_t oldSREG = SREG;
     
@@ -76,7 +76,7 @@ uint32_t millis(void){
 //      None
 // Returns:
 //      The number of microseconds since the program started
-uint32_t micros(void){
+uint32_t Micros(void){
     uint32_t m;
     uint8_t oldSREG = SREG, t;
     
@@ -98,11 +98,11 @@ uint32_t micros(void){
 //      Does nothing for the specified number of milliseconds
 // Arguments:
 //      ms (uint32_t): The number of milliseconds to wait
-void delay(uint32_t ms){
-    uint32_t start = micros();
+void Delay(uint32_t ms){
+    uint32_t start = Micros();
     
     while(ms > 0){
-        while(ms > 0 && (micros() - start) >= 1000){
+        while(ms > 0 && (Micros() - start) >= 1000){
             ms--;
             start += 1000;
         }
@@ -114,7 +114,7 @@ void delay(uint32_t ms){
 //      Delays the specified number of microseconds
 // Arguments:
 //      us (uint32_t): The number of microseconds to delay for
-void delayMicro(uint32_t us){
+void DelayMicro(uint32_t us){
     // for a 1 and 2 microsecond delay, simply return.  the overhead
     // of the function call takes 14 (16) cycles, which is 2us
     if (us <= 2) return; //  = 3 cycles, (4 when true)
@@ -149,7 +149,7 @@ void delayMicro(uint32_t us){
 //      0 if the button is not pressed or has not passed either timeout
 //      1 if button is pressed for longer than the short timeout and less than the long timeout
 //      2 if the button is pressed for longer than the long timeout
-uint8_t buttonRead(volatile uint8_t * pinx, uint8_t pin, uint16_t shortTimeout, uint16_t longTimeout){
+uint8_t ButtonRead(volatile uint8_t * pinx, uint8_t pin, uint16_t shortTimeout, uint16_t longTimeout){
     static uint8_t pressed = 0;
     static uint32_t downTime = 0;
     uint32_t upTime = 0;
@@ -159,11 +159,11 @@ uint8_t buttonRead(volatile uint8_t * pinx, uint8_t pin, uint16_t shortTimeout, 
         if(!pressed){
             // set flag on press to get time
             pressed = 1;
-            downTime = millis();
+            downTime = Millis();
         }
 
         // return if passed long timeout and still held
-        if(millis() - downTime >= longTimeout){
+        if(Millis() - downTime >= longTimeout){
             return 2;
         }
     }else{
@@ -171,7 +171,7 @@ uint8_t buttonRead(volatile uint8_t * pinx, uint8_t pin, uint16_t shortTimeout, 
             // reset flag
             pressed = 0;
             // get release time if button was pressed
-            upTime = millis();
+            upTime = Millis();
             
             // determine what kind of press happened
             if(upTime - downTime >= longTimeout){

@@ -55,24 +55,24 @@
 
 
 // user commands
-void lcdInit(volatile uint8_t * port, uint8_t pin);
-void lcdPrint(const char * data);
-void lcdClear();
-void lcdHome();
-void lcdSetCursor(uint8_t col, uint8_t row);
-void lcdSetBacklight(uint8_t status);
-void lcdDisplay();
-void lcdCursor(uint8_t state);
-void lcdCursorBlink(uint8_t state);
-void lcdCreateChar(uint8_t location, uint8_t * charMap);
+void LcdInit(volatile uint8_t * port, uint8_t pin);
+void LcdPrint(const char * data);
+void LcdClear();
+void LcdHome();
+void LcdSetCursor(uint8_t col, uint8_t row);
+void LcdSetBacklight(uint8_t status);
+void LcdDisplay();
+void LcdCursor(uint8_t state);
+void LcdCursorBlink(uint8_t state);
+void LcdCreateChar(uint8_t location, uint8_t * charMap);
 
 // internal commands
-void lcdSetPin(uint8_t pin, uint8_t value);
-void lcdPulse();
-void lcdWrite4Bits(uint8_t value);
-void lcdSend(uint8_t value, uint8_t mode);
-void lcdCommand(uint8_t value);
-void lcdWrite(uint8_t value);
+void LcdSetPin(uint8_t pin, uint8_t value);
+void LcdPulse();
+void LcdWrite4Bits(uint8_t value);
+void LcdSend(uint8_t value, uint8_t mode);
+void LcdCommand(uint8_t value);
+void LcdWrite(uint8_t value);
 
 
 #endif /* LCD_H_ */

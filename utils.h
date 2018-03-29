@@ -9,12 +9,12 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-void timerInit(void);
-uint32_t millis(void);
-uint32_t micros(void);
-void delay(uint32_t ms);
-void delayMicro(uint32_t us);
-uint8_t buttonRead(volatile uint8_t * pinx, uint8_t pin, uint16_t shortTimeout, uint16_t longTimeout);
+void TimerInit(void);
+uint32_t Millis(void);
+uint32_t Micros(void);
+void Delay(uint32_t ms);
+void DelayMicro(uint32_t us);
+uint8_t ButtonRead(volatile uint8_t * pinx, uint8_t pin, uint16_t shortTimeout, uint16_t longTimeout);
 
 void swap(uint8_t * a, uint8_t * b);
 void reverse(uint8_t * str, uint8_t len);

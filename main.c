@@ -11,7 +11,6 @@
 #include "utils.h"
 #include "spi.h"
 #include "lcd.h"
-#include "max6675.h"
 #include "encoder.h"
 #include "menu.h"
 
@@ -32,7 +31,7 @@ char printBuf[16];
 int main(void){
     //-----------------------------Initialization----------------------------//
     // enable timer0 for timekeeping
-    timerInit();
+    TimerInit();
     
     // set cs pins as output
     DDRB |= (1 << DDB2) | (1 << DDB1);
@@ -43,44 +42,43 @@ int main(void){
     PORTC |= (1 << PORTC2);
     
     // enable spi
-    spiInit(SPI_CLKDIV_4);
+    SpiInit(SPI_CLKDIV_4);
     // enable lcd
-    lcdInit(&PORTB, PORTB2);
+    LcdInit(&PORTB, PORTB2);
     // create a degree symbol
     uint8_t degSymbol[] = {0x0C, 0x12, 0x12, 0x0C, 0x00, 0x00, 0x00, 0x00};
     uint8_t boxSymbol[] = {0x1F, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1F};
-    lcdCreateChar(0, degSymbol);
-    lcdCreateChar(1, boxSymbol);
-    lcdClear();
-    lcdClear();
+    LcdCreateChar(0, degSymbol);
+    LcdCreateChar(1, boxSymbol);
+    LcdClear();
+    LcdClear();
     // enable max6675
-    max6675Init(&PORTB, PORTB1);
     // initialize encoder
-    encoderInit(&PORTC, PORTC1, PORTC0);
+    EncoderInit(&PORTC, PORTC1, PORTC0);
     
     //---------------------------End Initialization--------------------------//
     
-    lcdPrint("   YetAnother\nReflowController");
-    delay(2000);
-    lcdClear();
+    LcdPrint("   YetAnother\nReflowController");
+    Delay(2000);
+    LcdClear();
     
     // profile vars
     Profile_t profile = Profiles[0];    // default to lead
     
     // wait for button to select a profile.
-    lcdPrint("Select Profile:");
-    while(buttonRead(&PINC, PINC2, 50, 1000) != 1){
+    LcdPrint("Select Profile:");
+    while(ButtonRead(&PINC, PINC2, 50, 1000) != 1){
         // read encoder
-        int16_t encoderPos = encoderRead();
+        int16_t encoderPos = EncoderRead();
         static int16_t lastEncPos = -1;
         
         // check bounds
         if(encoderPos < 0){
             encoderPos = 0;
-            encoderSetPos(0);
+            EncoderSetPos(0);
         }else if(encoderPos > NUM_PROFILES - 1){
             encoderPos = NUM_PROFILES - 1;
-            encoderSetPos(NUM_PROFILES);
+            EncoderSetPos(NUM_PROFILES);
         }
         
         // get the profile selected by the encoder
@@ -88,31 +86,31 @@ int main(void){
         // update display if encoder changed
         if(encoderPos != lastEncPos){
             lastEncPos = encoderPos;
-            lcdSetCursor(1, 1);
-            lcdPrint("                ");  // clear line
-            lcdSetCursor(1, 1);
-            lcdPrint(profile.profileName);
+            LcdSetCursor(1, 1);
+            LcdPrint("                ");  // clear line
+            LcdSetCursor(1, 1);
+            LcdPrint(profile.profileName);
         }
     }
     
     // display selected profile and wait for button to be held
-    lcdClear();
-    lcdPrint("Profile: ");
-    lcdPrint(profile.profileName);
-    lcdSetCursor(0, 1);
-    lcdPrint("Hold start...");
+    LcdClear();
+    LcdPrint("Profile: ");
+    LcdPrint(profile.profileName);
+    LcdSetCursor(0, 1);
+    LcdPrint("Hold start...");
     
     // blink button while waiting
     uint32_t blinkTime = 0;
-    while(buttonRead(&PINC, PINC2, 50, 1000) != 2){
-        if(millis() - blinkTime >= 1000){
-            blinkTime = millis();
+    while(ButtonRead(&PINC, PINC2, 50, 1000) != 2){
+        if(Millis() - blinkTime >= 1000){
+            blinkTime = Millis();
             PIND |= (1 << PIND0);
         }
     }
     
-    lcdClear();
-    lcdPrint("Phase: ");
+    LcdClear();
+    LcdPrint("Phase: ");
     while(1){
         static uint8_t phase = 0;
         static uint32_t loop10hz = 0;
@@ -125,17 +123,18 @@ int main(void){
         static int16_t pidOut = 0;
         
         // 10 hz loop
-        if(millis() - loop10hz >= 200){
-            loop10hz = millis();
+        if(Millis() - loop10hz >= 200){
+            loop10hz = Millis();
             // update lcd
-            lcdSetCursor(7, 0);
-            lcdPrint("        ");
-            lcdSetCursor(7, 0);
-            lcdPrint(PhaseText[phase]);
+            LcdSetCursor(7, 0);
+            LcdPrint("        ");
+            LcdSetCursor(7, 0);
+            LcdPrint(PhaseText[phase]);
             
             // update PID parameters
             // calc error
-            ovenTemp = max6675Read() / 4;
+            // ovenTemp = max6675Read() / 4;
+            //ovenTemp = max31855Read();
             pidError = profile.preHeatTemp - ovenTemp;
             if(pidError < -1000){
                 pidError = -1000;
@@ -169,16 +168,16 @@ int main(void){
             
             pidLastError = pidError;
             
-            lcdSetCursor(0, 1);
-            lcdPrint("p:     ");
-            lcdSetCursor(3, 1);
+            LcdSetCursor(0, 1);
+            LcdPrint("p:     ");
+            LcdSetCursor(3, 1);
             itoa(pidOut, printBuf, 10);
-            lcdPrint(printBuf);
-            lcdSetCursor(8, 1);
-            lcdPrint("t:   ");
-            lcdSetCursor(11, 1);
+            LcdPrint(printBuf);
+            LcdSetCursor(8, 1);
+            LcdPrint("t:   ");
+            LcdSetCursor(11, 1);
             itoa(ovenTemp, printBuf, 10);
-            lcdPrint(printBuf);
+            LcdPrint(printBuf);
         }
     }
 }

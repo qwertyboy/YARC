@@ -17,8 +17,8 @@
 #define SPI_CLKDIV_64   2
 #define SPI_CLKDIV_128  3
 
-void spiInit(uint8_t speed);
-uint8_t spiTransfer(uint8_t data, volatile uint8_t * csPort, uint8_t csPin);
-uint16_t spiTransfer16(uint16_t data, volatile uint8_t * csPort, uint8_t csPin);
+void SpiInit(uint8_t speed);
+uint8_t SpiTransfer(uint8_t data);
+uint16_t SpiTransfer16(uint16_t data);
 
 #endif /* SPI_H_ */

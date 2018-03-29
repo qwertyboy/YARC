@@ -51,7 +51,7 @@ ISR(PCINT2_vect){
 //      port (uint8_t *): A pointer to the port the encoder is connected to
 //      pinA (uint8_t): The pin the A phase of the encoder is connected to
 //      pinB (uint8_t): The pin the B phase of the encoder is connected to
-void encoderInit(volatile uint8_t * port, uint8_t pinA, uint8_t pinB){
+void EncoderInit(volatile uint8_t * port, uint8_t pinA, uint8_t pinB){
     // disable interrupts
     SREG &= ~(1 << SREG_I);
     
@@ -93,7 +93,7 @@ void encoderInit(volatile uint8_t * port, uint8_t pinA, uint8_t pinB){
 //      None
 // Returns:
 //      int32_t: The current encoder position
-int32_t encoderRead(void){
+int32_t EncoderRead(void){
     if(encPos != 0){
         return (encPos - 2) / 4;
     }else{
@@ -106,6 +106,6 @@ int32_t encoderRead(void){
 //      Sets the encoder position manually
 // Arguments:
 //      pos (int32_t): The position to set the encoder to
-void encoderSetPos(int32_t pos){
+void EncoderSetPos(int32_t pos){
     encPos = pos * 4;
 }
