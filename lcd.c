@@ -33,6 +33,8 @@ void LcdInit(volatile uint8_t * port, uint8_t pin){
     // copy the port and pin for cs
     lcdPort = port;
     lcdPin = pin;
+    // set cs pin as output, DDRx is one address below PORTx
+    *(lcdPort - 0x01) |= (1 << lcdPin);
     
     // backlight command
     //spiBuf = 0x80;

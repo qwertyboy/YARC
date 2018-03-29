@@ -12,6 +12,7 @@
 #include "spi.h"
 #include "lcd.h"
 #include "encoder.h"
+#include "max31855.h"
 #include "menu.h"
 
 // process states
@@ -33,8 +34,6 @@ int main(void){
     // enable timer0 for timekeeping
     TimerInit();
     
-    // set cs pins as output
-    DDRB |= (1 << DDB2) | (1 << DDB1);
     // led on PD0
     DDRD |= (1 << DDD0);
     // button on PC2, set as input and enable pull-up
@@ -52,7 +51,8 @@ int main(void){
     LcdCreateChar(1, boxSymbol);
     LcdClear();
     LcdClear();
-    // enable max6675
+    // enable max31855
+    Max31855Init(&PORTB, PORTB1);
     // initialize encoder
     EncoderInit(&PORTC, PORTC1, PORTC0);
     
@@ -123,7 +123,7 @@ int main(void){
         static int16_t pidOut = 0;
         
         // 10 hz loop
-        if(Millis() - loop10hz >= 200){
+        if(Millis() - loop10hz >= 100){
             loop10hz = Millis();
             // update lcd
             LcdSetCursor(7, 0);
@@ -134,7 +134,7 @@ int main(void){
             // update PID parameters
             // calc error
             // ovenTemp = max6675Read() / 4;
-            //ovenTemp = max31855Read();
+            ovenTemp = Max31855Read();
             pidError = profile.preHeatTemp - ovenTemp;
             if(pidError < -1000){
                 pidError = -1000;
