@@ -15,6 +15,13 @@
 #include "max31855.h"
 #include "menu.h"
 
+// io pins
+#define PIN_LED     PORTD0
+#define PIN_RELAY   PORTD1
+#define PIN_BUTTON  PORTC2
+#define PIN_LCD_CS  PORTB2
+#define PIN_MAX_CS  PORTB1
+
 // process states
 #define STATE_PREHEAT   0
 #define STATE_SOAK      1
@@ -22,9 +29,12 @@
 #define STATE_COOLDOWN  3
 
 // PID constants
-#define PID_KP 10
+#define PID_KP 15
 #define PID_KI 0.1
-#define PID_KD 6.5
+#define PID_KD 3
+#define PID_ERR_MAX (0xFFFF / PID_KP)
+#define PID_INT_MAX (0xFFFF * PID_KI)
+#define PID_DRV_MAX (0xFFFF / PID_KD)
 
 // misc variables
 char printBuf[16];
@@ -34,8 +44,8 @@ int main(void){
     // enable timer0 for timekeeping
     TimerInit();
     
-    // led on PD0
-    DDRD |= (1 << DDD0);
+    // led on PD0, relay on PD1
+    DDRD |= (1 << DDD0) | (1 << DDD1);
     // button on PC2, set as input and enable pull-up
     DDRC &= ~(1 << DDC2);
     PORTC |= (1 << PORTC2);
@@ -109,19 +119,25 @@ int main(void){
         }
     }
     
+    PORTD &= ~(1 << PORTD0);
     LcdClear();
     LcdPrint("Phase: ");
+    
+    // main loop variables
+    uint8_t phase = 0;
+    uint32_t loop10hz = 0;
+    // pid variables
+    uint16_t ovenTemp = 0;
+    int16_t pidError = 0;
+    int16_t pidLastError = 0;
+    int16_t pidIntegral = 0;
+    int16_t pidDerivative = 0;
+    int16_t pidOut = 0;
+    // relay control variables
+    uint16_t pidWindowSize = 1000;
+    uint32_t pidWindowStart = Millis();
+    
     while(1){
-        static uint8_t phase = 0;
-        static uint32_t loop10hz = 0;
-        // pid variables
-        static uint16_t ovenTemp = 0;
-        static int16_t pidError = 0;
-        static int16_t pidLastError = 0;
-        static int16_t pidIntegral = 0;
-        static int16_t pidDerivative = 0;
-        static int16_t pidOut = 0;
-        
         // 10 hz loop
         if(Millis() - loop10hz >= 100){
             loop10hz = Millis();
@@ -136,34 +152,45 @@ int main(void){
             // ovenTemp = max6675Read() / 4;
             ovenTemp = Max31855Read();
             pidError = profile.preHeatTemp - ovenTemp;
-            if(pidError < -1000){
-                pidError = -1000;
-            }else if(pidError > 1000){
-                pidError = 1000;
+            if(pidError < -2000){
+                pidError = -2000;
+            }else if(pidError > 2000){
+                pidError = 2000;
             }
             
             // calc integral
             pidIntegral += pidError;
-            if(pidIntegral < -1000){
-                pidIntegral = -1000;
-            }else if(pidIntegral > 1000){
-                pidIntegral = 1000;
+            if(pidIntegral < -2000){
+                pidIntegral = -2000;
+            }else if(pidIntegral > 2000){
+                pidIntegral = 2000;
             }
             
             // calc derivative
             pidDerivative = pidError - pidLastError;
-            if(pidDerivative < -1000){
-                pidDerivative = -1000;
-            }else if(pidDerivative > 1000){
-                pidDerivative = 1000;
+            if(pidDerivative < -2000){
+                pidDerivative = -2000;
+            }else if(pidDerivative > 2000){
+                pidDerivative = 2000;
             }
             
             // update control variable
             pidOut = (PID_KP * pidError) + (PID_KI * pidIntegral) + (PID_KD * pidDerivative);
             if(pidOut < 0){
                 pidOut = 0;
-            }else if(pidOut > 1000){
-                pidOut = 1000;
+            }else if(pidOut > 2000){
+                pidOut = 2000;
+            }
+            
+            // update relay output
+            uint32_t now = Millis();
+            if(now - pidWindowStart > pidWindowSize){
+                pidWindowStart += pidWindowSize;
+            }
+            if(pidOut > (now - pidWindowStart)){
+                PORTD |= (1 << PORTD0);
+            }else{
+                PORTD &= ~(1 << PORTD0);
             }
             
             pidLastError = pidError;
@@ -174,7 +201,7 @@ int main(void){
             itoa(pidOut, printBuf, 10);
             LcdPrint(printBuf);
             LcdSetCursor(8, 1);
-            LcdPrint("t:   ");
+            LcdPrint("t:    ");
             LcdSetCursor(11, 1);
             itoa(ovenTemp, printBuf, 10);
             LcdPrint(printBuf);

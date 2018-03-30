@@ -34,8 +34,8 @@ const char STATUS_REFLOW[]   = "Reflow";
 const char STATUS_COOLDOWN[] = "Cool-down";
 
 const Profile_t Profiles[] = {
-    {MT_PROFILE_LEAD, 60, 30, 90, 180, 210},
-    {MT_PROFILE_LEAD_FREE, 60, 150, 90, 220, 235}
+    {MT_PROFILE_LEAD, 240, 150, 90, 180, 210},
+    {MT_PROFILE_LEAD_FREE, 240, 150, 90, 220, 235}
 };
 
 const char * PhaseText[] = {
