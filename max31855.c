@@ -29,7 +29,9 @@ void Max31855Init(volatile uint8_t * port, uint8_t pin){
 
 
 //
-int16_t Max31855Read(void){
+float Max31855Read(void){
+    int16_t result = 0;
+    
     // drive cs low
     *max31855CsPort &= ~(1 << max31855CsPin);
     // read high and low words
@@ -38,7 +40,14 @@ int16_t Max31855Read(void){
     // drive cs high
     *max31855CsPort |= (1 << max31855CsPin);
     
-    // not correct for negative
-    int16_t result = (highWord & 0x8000) | ((highWord >> 1) & 0x3FFF);
-    return result >> 3;
+    // check if negative
+    if(highWord & 0x8000){
+        // shift over and sign extend
+        result = (highWord >> 2) | 0xC000;
+    }else{
+        result = highWord >> 2;
+    }
+    
+    float num = result * 0.25;
+    return num;
 }

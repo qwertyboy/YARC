@@ -15,6 +15,6 @@
 
 
 void Max31855Init(volatile uint8_t * port, uint8_t pin);
-int16_t Max31855Read(void);
+float Max31855Read(void);
 
 #endif /* MAX31855_H_ */
